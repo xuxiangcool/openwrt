@@ -85,6 +85,9 @@ ramips_board_detect() {
 	*"Broadway")
 		name="broadway"
 		;;
+	*"C108")
+		name="c108"
+		;;
 	*"C20i")
 		name="c20i"
 		;;
@@ -285,6 +288,9 @@ ramips_board_detect() {
 		;;
 	*"Mercury MAC1200R v2")
 		name="mac1200rv2"
+		;;
+	*"Mi Router 3G")
+		name="mir3g"
 		;;
 	*"MicroWRT")
 		name="microwrt"
@@ -522,6 +528,9 @@ ramips_board_detect() {
 		;;
 	*"VoCore2")
 		name="vocore2"
+		;;
+	*"VoCore2-Lite")
+		name="vocore2lite"
 		;;
 	*"VR500")
 		name="vr500"

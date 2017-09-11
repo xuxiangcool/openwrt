@@ -103,6 +103,9 @@ get_status_led() {
 	wrh-300cr)
 		status_led="$board:green:wps"
 		;;
+	c108)
+		status_led="$board:green:lan"
+		;;
 	cf-wr800n|\
 	psg1208)
 		status_led="$board:white:wps"
@@ -177,6 +180,9 @@ get_status_led() {
 	m4-8M)
 		status_led="m4:blue:status"
 		;;
+	mir3g)
+		status_led="$board:yellow:status"
+		;;
 	miwifi-mini|\
 	zte-q7)
 		status_led="$board:red:status"
@@ -239,6 +245,9 @@ get_status_led() {
 		;;
 	vocore2)
 		status_led="$board:fuchsia:status"
+		;;
+	vocore2lite)
+		status_led="$board:green:status"
 		;;
 	w306r-v20|\
 	witi|\
