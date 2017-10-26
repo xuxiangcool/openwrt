@@ -193,6 +193,13 @@ define Device/gl-mt300a
 endef
 TARGET_DEVICES += gl-mt300a
 
+define Device/u25awf-h1
+  DTS := U25AWF-H1
+  IMAGE_SIZE := 16064k
+  DEVICE_TITLE := Kimax U25AWF-H1
+endef
+TARGET_DEVICES += u25awf-h1
+
 define Device/gl-mt300n
   DTS := GL-MT300N
   IMAGE_SIZE := $(ralink_default_fw_size_16M)
@@ -478,6 +485,7 @@ define Device/wt3020-8M
   IMAGE/factory.bin := $$(sysupgrade_bin) | check-size $$$$(IMAGE_SIZE) | \
 	poray-header -B WT3020 -F 8M
   DEVICE_TITLE := Nexx WT3020 (8MB)
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci
 endef
 TARGET_DEVICES += wt3020-8M
 
