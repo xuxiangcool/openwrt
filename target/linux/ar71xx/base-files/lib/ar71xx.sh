@@ -452,6 +452,9 @@ ar71xx_board_detect() {
 	*"AP90Q")
 		name="ap90q"
 		;;
+	*"AP91-5G")
+		name="ap91-5g"
+		;;
 	*"Archer C25 v1")
 		name="archer-c25-v1"
 		;;
@@ -676,6 +679,9 @@ ar71xx_board_detect() {
 	*"GL-AR300M")
 		name="gl-ar300m"
 		;;
+	*"GL-AR750")
+		name="gl-ar750"
+		;;
 	*"GL-CONNECT INET v1")
 		name="gl-inet"
 
@@ -771,6 +777,9 @@ ar71xx_board_detect() {
 	*"MZK-W300NH")
 		name="mzk-w300nh"
 		;;
+	*"N5Q")
+		name="n5q"
+		;;
 	*"Nanostation M")
 		name="nanostation-m"
 		ubnt_xm_board_detect
@@ -846,6 +855,9 @@ ar71xx_board_detect() {
 		;;
 	*"Qihoo 360 C301")
 		name="qihoo-c301"
+		;;
+	*"R36A")
+		name="r36a"
 		;;
 	*"R602N")
 		name="r602n"
@@ -935,6 +947,12 @@ ar71xx_board_detect() {
 	*"RouterBOARD 751G")
 		name="rb-751g"
 		;;
+	*"RouterBOARD 911-2Hn")
+		name="rb-911-2hn"
+		;;
+	*"RouterBOARD 911-5Hn")
+		name="rb-911-5hn"
+		;;
 	*"RouterBOARD 911G-2HPnD")
 		name="rb-911g-2hpnd"
 		;;
@@ -989,11 +1007,17 @@ ar71xx_board_detect() {
 	*"RouterBOARD wAP 2nD r2")
 		name="rb-wap-2nd"
 		;;
+	*"RouterBOARD wAP G-5HacT2HnD")
+		name="rb-wapg-5hact2hnd"
+		;;
 	*"RouterStation")
 		name="routerstation"
 		;;
 	*"RouterStation Pro")
 		name="routerstation-pro"
+		;;
+	*"RUT900")
+		name="rut900"
 		;;
 	*"RW2458N")
 		name="rw2458n"
