@@ -29,9 +29,109 @@ Subject: [PATCH] Add QCAWIFI Backend
  ifneq ($(filter nl80211,$(IWINFO_BACKENDS)),)
  	IWINFO_CFLAGS      += -DUSE_NL80211
  	IWINFO_CLI_LDFLAGS += -lnl-tiny
+--- /dev/null
++++ b/api/qcawifi.h
+@@ -0,0 +1,97 @@
++/*
++ * iwinfo - Wireless Information Library - QCAWifi Headers
++ *
++ *   Copyright (c) 2013 The Linux Foundation. All rights reserved.
++ *   Copyright (C) 2009 Jo-Philipp Wich <xm@subsignal.org>
++ *
++ * The iwinfo library is free software: you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * The iwinfo library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with the iwinfo library. If not, see http://www.gnu.org/licenses/.
++ *
++ * This file is based on: src/include/iwinfo/madwifi.h
++ */
++
++#ifndef __IWINFO_QCAWIFI_H_
++#define __IWINFO_QCAWIFI_H_
++
++#include <fcntl.h>
++
++/* The driver is using only one "_" character in front of endianness macros
++ * whereas the uClibc is using "__" */
++#include <endian.h>
++#if __BYTE_ORDER == __BIG_ENDIAN
++#define _BYTE_ORDER _BIG_ENDIAN
++#elif __BYTE_ORDER == __LITTLE_ENDIAN
++#define _BYTE_ORDER _LITTLE_ENDIAN
++#else
++#error "__BYTE_ORDER undefined"
++#endif
++
++#include "iwinfo.h"
++#include "iwinfo/utils.h"
++#include "ieee80211_external.h"
++#if 0
++int qcawifi_probe(const char *ifname);
++int qcawifi_get_mode(const char *ifname, int *buf);
++int qcawifi_get_ssid(const char *ifname, char *buf);
++int qcawifi_get_bssid(const char *ifname, char *buf);
++int qcawifi_get_country(const char *ifname, char *buf);
++int qcawifi_get_channel(const char *ifname, int *buf);
++int qcawifi_get_frequency(const char *ifname, int *buf);
++int qcawifi_get_frequency_offset(const char *ifname, int *buf);
++int qcawifi_get_txpower(const char *ifname, int *buf);
++int qcawifi_get_txpower_offset(const char *ifname, int *buf);
++int qcawifi_get_bitrate(const char *ifname, int *buf);
++int qcawifi_get_signal(const char *ifname, int *buf);
++int qcawifi_get_noise(const char *ifname, int *buf);
++int qcawifi_get_quality(const char *ifname, int *buf);
++int qcawifi_get_quality_max(const char *ifname, int *buf);
++int qcawifi_get_encryption(const char *ifname, char *buf);
++int qcawifi_get_assoclist(const char *ifname, char *buf, int *len);
++int qcawifi_get_txpwrlist(const char *ifname, char *buf, int *len);
++int qcawifi_get_scanlist(const char *ifname, char *buf, int *len);
++int qcawifi_get_freqlist(const char *ifname, char *buf, int *len);
++int qcawifi_get_countrylist(const char *ifname, char *buf, int *len);
++int qcawifi_get_hwmodelist(const char *ifname, int *buf);
++int qcawifi_get_mbssid_support(const char *ifname, int *buf);
++int qcawifi_get_hardware_id(const char *ifname, char *buf);
++int qcawifi_get_hardware_name(const char *ifname, char *buf);
++void qcawifi_close(void);
++
++static const struct iwinfo_ops qcawifi_ops = {
++	.channel          = qcawifi_get_channel,
++	.frequency        = qcawifi_get_frequency,
++	.frequency_offset = qcawifi_get_frequency_offset,
++	.txpower          = qcawifi_get_txpower,
++	.txpower_offset   = qcawifi_get_txpower_offset,
++	.bitrate          = qcawifi_get_bitrate,
++	.signal           = qcawifi_get_signal,
++	.noise            = qcawifi_get_noise,
++	.quality          = qcawifi_get_quality,
++	.quality_max      = qcawifi_get_quality_max,
++	.mbssid_support   = qcawifi_get_mbssid_support,
++	.hwmodelist       = qcawifi_get_hwmodelist,
++	.mode             = qcawifi_get_mode,
++	.ssid             = qcawifi_get_ssid,
++	.bssid            = qcawifi_get_bssid,
++	.country          = qcawifi_get_country,
++	.hardware_id      = qcawifi_get_hardware_id,
++	.hardware_name    = qcawifi_get_hardware_name,
++	.encryption       = qcawifi_get_encryption,
++	.assoclist        = qcawifi_get_assoclist,
++	.txpwrlist        = qcawifi_get_txpwrlist,
++	.scanlist         = qcawifi_get_scanlist,
++	.freqlist         = qcawifi_get_freqlist,
++	.countrylist      = qcawifi_get_countrylist,
++	.close            = qcawifi_close
++};
++#endif
++#endif
 --- a/include/iwinfo.h
 +++ b/include/iwinfo.h
-@@ -230,6 +230,7 @@ void iwinfo_finish(void);
+@@ -222,6 +222,7 @@ void iwinfo_finish(void);
  
  extern const struct iwinfo_ops wext_ops;
  extern const struct iwinfo_ops madwifi_ops;
@@ -161,7 +261,7 @@ Subject: [PATCH] Add QCAWIFI Backend
  	luaL_register(L, NULL, R_common);
 --- /dev/null
 +++ b/iwinfo_qcawifi.c
-@@ -0,0 +1,1200 @@
+@@ -0,0 +1,1188 @@
 +/*
 + * iwinfo - Wireless Information Library - QCAWifi Backend
 + *
@@ -183,23 +283,9 @@ Subject: [PATCH] Add QCAWIFI Backend
 + * This file is based on: src/iwinfo_madwifi.c
 + */
 +
-+#include <fcntl.h>
-+
-+/* The driver is using only one "_" character in front of endianness macros
-+ * whereas the uClibc is using "__" */
-+#include <endian.h>
-+#if __BYTE_ORDER == __BIG_ENDIAN
-+#define _BYTE_ORDER _BIG_ENDIAN
-+#elif __BYTE_ORDER == __LITTLE_ENDIAN
-+#define _BYTE_ORDER _LITTLE_ENDIAN
-+#else
-+#error "__BYTE_ORDER undefined"
-+#endif
-+
-+#include "iwinfo.h"
-+#include "iwinfo/utils.h"
-+#include "ieee80211_external.h"
 +#include "iwinfo_wext.h"
++#include "api/qcawifi.h"
++
 +
 +/*
 + * Madwifi ISO 3166 to Country/Region Code mapping.
@@ -406,7 +492,7 @@ Subject: [PATCH] Add QCAWIFI Backend
 +static char * qcawifi_isvap(const char *ifname, const char *wifiname)
 +{
 +	int fd, ln;
-+	char path[64];
++	char path[32];
 +	char *ret = NULL;
 +	static char name[IFNAMSIZ];
 +
@@ -441,7 +527,7 @@ Subject: [PATCH] Add QCAWIFI Backend
 +	int fd, ln;
 +	int ret = 0;
 +	char prot[16];
-+	char path[64];
++	char path[32];
 +
 +	/* qcawifi has a "hwcaps" file in wifiN sysfs to define the
 +	 * protocol actually supported by the hardware */
@@ -586,7 +672,6 @@ Subject: [PATCH] Add QCAWIFI Backend
 +	uint8_t *cp;
 +	struct iwreq wrq;
 +	struct ieee80211req_sta_info *si;
-+	int ret;
 +
 +	if( qcawifi_wrq(&wrq, ifname, SIOCGIWMODE, NULL, 0) >= 0 )
 +	{
@@ -604,14 +689,14 @@ Subject: [PATCH] Add QCAWIFI Backend
 +				do {
 +					si = (struct ieee80211req_sta_info *) cp;
 +
-+					if( si->isi_txratekbps == 0 )
-+						rate = ((si->isi_rates[si->isi_txrate] & IEEE80211_RATE_VAL) / 2) * 1000;
-+					else
-+						rate = si->isi_txratekbps;
++					if( si->isi_rssi > 0 )
++					{
++						rate_count++;
++						rate += ((si->isi_rates[si->isi_txrate] & IEEE80211_RATE_VAL) / 2);
++					}
 +
 +					cp   += si->isi_len;
 +					len  -= si->isi_len;
-+					rate_count++;
 +				} while (len >= sizeof(struct ieee80211req_sta_info));
 +			}
 +
@@ -620,11 +705,7 @@ Subject: [PATCH] Add QCAWIFI Backend
 +		}
 +
 +		/* Return whatever wext tells us ... */
-+		ret = wext_ops.bitrate(ifname, buf);
-+		if(ret == 0) {
-+			(*buf) *= 1000;
-+		}
-+		return ret;
++		return wext_ops.bitrate(ifname, buf);
 +	}
 +
 +	return -1;
@@ -893,24 +974,24 @@ Subject: [PATCH] Add QCAWIFI Backend
 +	return 0;
 +}
 +
-+int qcawifi_get_phyname(const char *ifname, char *buf)
++static int qcawifi_get_phyname(const char *ifname, char *buf)
 +{
-+       const char *wifidev;
++	const char *wifidev;
 +
-+       wifidev = qcawifi_isvap(ifname, NULL);
++	wifidev = qcawifi_isvap(ifname, NULL);
 +
-+       if (wifidev)
-+       {
-+               strncpy(buf, wifidev, IFNAMSIZ);
-+               return 0;
-+       }
-+       else if (qcawifi_iswifi(ifname))
-+       {
-+               strncpy(buf, ifname, IFNAMSIZ);
-+               return 0;
-+       }
++	if (wifidev)
++	{
++		strcpy(buf, wifidev);
++		return 0;
++	}
++	else if (qcawifi_iswifi(ifname))
++	{
++		strcpy(buf, ifname);
++		return 0;
++	}
 +
-+       return -1;
++	return -1;
 +}
 +
 +int qcawifi_get_assoclist(const char *ifname, char *buf, int *len)
@@ -932,8 +1013,7 @@ Subject: [PATCH] Add QCAWIFI Backend
 +		if( qcawifi_get_noise(ifname, &noise) )
 +			noise = 0;
 +
-+		while (tl >= sizeof(struct ieee80211req_sta_info))
-+		{
++		do {
 +			si = (struct ieee80211req_sta_info *) cp;
 +
 +			memset(&entry, 0, sizeof(entry));
@@ -951,21 +1031,45 @@ Subject: [PATCH] Add QCAWIFI Backend
 +				>> IEEE80211_SEQ_SEQ_SHIFT;
 +
 +			if(si->isi_txratekbps == 0)
-+				entry.tx_rate.rate = (si->isi_rates[si->isi_txrate] & IEEE80211_RATE_VAL)/2 * 1000;
++				entry.tx_rate.rate = (si->isi_rates[si->isi_txrate] & IEEE80211_RATE_VAL) * 500;
 +			else
-+				entry.tx_rate.rate = si->isi_txratekbps;
++				entry.tx_rate.rate =si->isi_txratekbps;
 +
 +			entry.rx_rate.rate = si->isi_rxratekbps;
 +
 +			entry.rx_rate.mcs = -1;
 +			entry.tx_rate.mcs = -1;
 +
++
++			/* HTCAPS */
++
++			if ((si->isi_stamode >= 9) && (si->isi_stamode <= 14)) {    /* HT40 */
++				entry.tx_rate.mhz = 40;
++				entry.tx_rate.is_ht = 1;
++
++				if ((si->isi_htcap) & IEEE80211_HTCAP_C_SHORTGI40)
++					entry.tx_rate.is_short_gi = 1;
++			} else if ((si->isi_stamode >= 15) && (si->isi_stamode <= 21)) {  /* VHT */
++				entry.tx_rate.is_vht = 1;
++				if(si->isi_stamode == 15)
++					entry.tx_rate.mhz = 20;
++				else if((si->isi_stamode >= 16) && (si->isi_stamode <= 18))
++					entry.tx_rate.mhz = 40;
++				else if(si->isi_stamode == 19)
++					entry.tx_rate.mhz = 80;
++				else
++					entry.tx_rate.mhz = 160;
++			} else {
++				entry.tx_rate.mhz = 20;
++			}
++
++			entry.tx_rate.is_40mhz = (entry.tx_rate.mhz == 40);
 +			memcpy(&buf[bl], &entry, sizeof(struct iwinfo_assoclist_entry));
 +
 +			bl += sizeof(struct iwinfo_assoclist_entry);
 +			cp += si->isi_len;
 +			tl -= si->isi_len;
-+		}
++		} while (tl >= sizeof(struct ieee80211req_sta_info));
 +
 +		*len = bl;
 +		return 0;
@@ -1213,45 +1317,23 @@ Subject: [PATCH] Add QCAWIFI Backend
 +	return 0;
 +}
 +
-+#define QCA_HTMODE_ADD(MODESTR, MODEVAL) if(strstr(prot, MODESTR)) *buf |= MODEVAL;
-+int qcawifi_get_htmodelist(const char *ifname, int *buf)
++static int qcawifi_get_htmodelist(const char *ifname, int *buf)
 +{
-+	char *wifidev;
-+	char path[32], prot[256];
-+	int fd;
-+	int ret = -1;
++	int modes;
 +
-+	if( !(wifidev = qcawifi_isvap(ifname, NULL)) )
++	if (!qcawifi_get_hwmodelist(ifname, &modes))
 +	{
-+		wifidev = (char *)ifname;
++		*buf = 0;
++
++		if (modes & IWINFO_80211_N)
++			*buf |= IWINFO_HTMODE_HT20 | IWINFO_HTMODE_HT40;
++
++		if (modes & IWINFO_80211_AC)
++			*buf |= IWINFO_HTMODE_VHT20 | IWINFO_HTMODE_VHT40 |
++			        IWINFO_HTMODE_VHT80 | IWINFO_HTMODE_VHT160;
++
++		return 0;
 +	}
-+
-+	sprintf(path, "/sys/class/net/%s/hwmodes", wifidev);
-+	if( (fd = open(path, O_RDONLY)) < 0 )
-+		return -1;
-+
-+	memset(prot, 0, sizeof(prot));
-+	if( read(fd, prot, sizeof(prot)) < 0) {
-+		close(fd);
-+		return -1;
-+	}
-+
-+	*buf = 0;
-+
-+	if(strstr(prot, "11AC")) {
-+		QCA_HTMODE_ADD("_VHT20", IWINFO_HTMODE_VHT20)
-+		QCA_HTMODE_ADD("_VHT40", IWINFO_HTMODE_VHT40)
-+		QCA_HTMODE_ADD("_VHT80", IWINFO_HTMODE_VHT80)
-+		QCA_HTMODE_ADD("_VHT160", IWINFO_HTMODE_VHT160)
-+		QCA_HTMODE_ADD("_VHT80_80", IWINFO_HTMODE_VHT80_80)
-+	} else {
-+		QCA_HTMODE_ADD("_HT20", IWINFO_HTMODE_HT20)
-+		QCA_HTMODE_ADD("_HT40", IWINFO_HTMODE_HT40)
-+	}
-+	close(fd);
-+	return 0;
-+
-+
 +	return -1;
 +}
 +
@@ -1300,8 +1382,15 @@ Subject: [PATCH] Add QCAWIFI Backend
 +int qcawifi_get_hardware_name(const char *ifname, char *buf)
 +{
 +	const struct iwinfo_hardware_entry *hw;
++	const char *wifidev;
 +
-+	if (!(hw = qcawifi_get_hardware_entry(ifname)))
++	wifidev = qcawifi_isvap(ifname, NULL);
++	if(wifidev)
++		hw = qcawifi_get_hardware_entry(wifidev);
++	else
++		hw = qcawifi_get_hardware_entry(ifname);
++
++	if (!hw)
 +		sprintf(buf, "Qualcomm Atheros");
 +	else
 +		sprintf(buf, "%s %s", hw->vendor_name, hw->device_name);
@@ -1330,7 +1419,6 @@ Subject: [PATCH] Add QCAWIFI Backend
 +	*buf = hw->frequency_offset;
 +	return 0;
 +}
-+
 +const struct iwinfo_ops qcawifi_ops = {
 +	.name             = "qcawifi",
 +	.probe            = qcawifi_probe,
