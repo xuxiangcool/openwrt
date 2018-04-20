@@ -1907,7 +1907,7 @@ config ATH79_MACH_TL_WR902AC_V1
 	select ATH79_DEV_USB
 	select ATH79_DEV_WMAC
 
-config ATH79_MACH_TL_WR882N_v1
+config ATH79_MACH_TL_WR882N_V1
 	bool "TP-LINK TL-WR882N v1 board support"
 	select SOC_QCA956X
 	select ATH79_DEV_ETH
